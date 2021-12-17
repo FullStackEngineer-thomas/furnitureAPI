@@ -4,14 +4,15 @@ const UserSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
+    unique: true,
   },
   password: {
     type: String,
     required: true,
   },
-  rememberMe: {
+  checked: {
     type: Boolean,
-    required: true,
+    default: false,
   },
   date: {
     type: Date,
@@ -19,6 +20,6 @@ const UserSchema = new mongoose.Schema({
   },
 });
 
-const User = mongoose.model("users", UserSchema);
+const Users = mongoose.model("users", UserSchema);
 
-module.exports = User;
+module.exports = Users;

@@ -9,6 +9,9 @@ const Test = require("./models/Test");
 const Users = require("./models/User");
 
 const passwordHash = require("password-hash");
+
+const validator = require("email-validator");
+
 const router = express.Router();
 
 router.get("/products", async (req, res) => {
@@ -57,13 +60,50 @@ router.delete("/posts/:id", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-  console.log(req.body);
-  res.json({ status: "ok" });
+  const { email, password } = req.body;
+  console.log(email, password);
+
+  const user = await Users.findOne({ email }).lean();
+
+  if (!user) {
+    return res.json({ status: "error", error: "Invalid username or password" });
+  }
+
+  if (password === user.password) {
+    return res.json({ status: "ok", data: "" });
+  }
+
+  res.json({ status: "error", error: "Invalid username or password" });
 });
 router.post("/register", async (req, res) => {
   console.log(req.body);
-  const hashedPassword = passwordHash.generate(req.body?.password);
-  console.log("hashedpassword: ", hashedPassword);
-  res.json({ status: "ok" });
+  const { email, password, checked } = req.body;
+  const hashedPassword = passwordHash.generate(password);
+
+  if (!email || typeof email !== "string") {
+    return res.json({ status: "error", error: "Invalid email" });
+  }
+  if (!password || typeof password !== "string") {
+    return res.json({ status: "error", error: "invalid password" });
+  }
+  if (validator.validate(email)) {
+    try {
+      const response = await Users.create({
+        email,
+        password,
+        checked,
+      });
+      console.log("User created successfully:", response);
+      return res.sendStatus("ok");
+    } catch (err) {
+      if (err.code === 11000) {
+        // duplicate key
+        return res.json({ status: "error", err: "Username already in use" });
+      }
+      throw err;
+    }
+  } else {
+    console.log("this is not email address");
+  }
 });
 module.exports = router;
