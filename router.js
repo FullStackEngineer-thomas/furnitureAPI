@@ -59,6 +59,7 @@ router.delete("/posts/:id", async (req, res) => {
   }
 });
 
+// Login API
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   console.log(email, password);
@@ -75,6 +76,8 @@ router.post("/login", async (req, res) => {
 
   res.json({ status: "error", error: "Invalid username or password" });
 });
+
+// Register API
 router.post("/register", async (req, res) => {
   console.log(req.body);
   const { email, password, checked } = req.body;
@@ -94,10 +97,11 @@ router.post("/register", async (req, res) => {
         checked,
       });
       console.log("User created successfully:", response);
-      return res.sendStatus("ok");
+      return res.json({ status: "success" });
     } catch (err) {
       if (err.code === 11000) {
         // duplicate key
+        console.log(res.statusCode, res.statusMessage);
         return res.json({ status: "error", err: "Username already in use" });
       }
       throw err;
@@ -105,5 +109,47 @@ router.post("/register", async (req, res) => {
   } else {
     console.log("this is not email address");
   }
+});
+
+// forget password router link
+
+router.put("/forgotpassword", async (req, res) => {
+  const { email } = req.body;
+  console.log(email);
+  Users.findOne({ email }, (err, user) => {
+    if (err || !user) {
+      return res
+        .status(400)
+        .json({ error: "User with this email does not exists. " });
+    }
+  });
+
+
+  // send html link to user email 
+
+  const data = {
+    from :'furnitureapp@gmail.com',
+    to: email,
+    subject:'Account Activation Link',
+    html:`
+      <h2>Please click on given link to reset your password</h2>
+      `
+  };
+
+  return user.updateOne((err,success){
+    if(err){
+      return res.status(400).json({error:'Reset password link error'})
+    }else{
+      mg.statusMessage().send(data,function(error,body){
+        if(error){
+          return res.json({
+            error:err.message
+          })
+        }
+
+        return res.json({message:'Email has been sent,kindly follow the instructions'})
+      })
+    }
+  })
 });
 module.exports = router;

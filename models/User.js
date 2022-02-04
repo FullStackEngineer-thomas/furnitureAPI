@@ -18,6 +18,10 @@ const UserSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  resetLink: {
+    data: String,
+    default: "",
+  },
 });
 
 const Users = mongoose.model("users", UserSchema);
